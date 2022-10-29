@@ -1,0 +1,1490 @@
+GlowScript 3.2 VPython
+
+# +++ BUILDING SCENE
+scene.bind('keydown', keydown_fun)     # Function for key presses
+scene.background = color.hsv_to_rgb(vector (0.053, 0.007, 0.890))   # Light gray using Glowscript IDE
+scene.width = 740                      
+scene.height = 580
+scene.ambient=color.gray(0.8) 
+
+temprules = label(pos=vec(-45,0,-20), text="""
+- Use the arrow keys to operate the turtle
+- If you hit any obstacles the turtle gets hurt!
+- If the beachballs knock over the castle the castle no longer exists 
+- If the turtle gets hurt you can hit the "r" key to reincarnate the turtle!""", 
+        color =color.hsv_to_rgb(vector (0.514, 1.000, 0.641)),
+        linecolor =color.hsv_to_rgb(vector (0.783, -4.664, 0.602)),
+        align = 'left',
+        height=20
+        )
+
+
+
+mainlabel = label( pos=vec(25,12,-35), text="""
+            Save the turtle! 
+            avoid the TRASH(caltech), 
+            umbrellas, sandcastle and beachballs!""", 
+        color =color.hsv_to_rgb(vector (0.514, 1.000, 0.641)),
+        align = 'center',
+        box = False,
+        opacity = 0
+        )
+
+# +++ END BUILDING SCENE
+
+# +++ start of OBJECT_CREATION section
+# These functions create "container" objects, called "compounds"
+
+def make_seaweed(starting_position, starting_vel = vec (0,0,0)): 
+    """
+    Makes seaweed at base of ocean :)
+    """
+    seaweed_base = ellipsoid(pos = vector(2.2, -9, 45), 
+                            width = -1.5,
+                            length = 2,
+                            height = .1,
+                            color = color.hsv_to_rgb(vector (0.131, 1.000, 0.256)),
+                            ) 
+    seaweed_stem1 = cone(pos=vector(2.1,-9,45.33),
+                         axis=vector(0,1,0),
+                         size=vector(2.15,.76,.3),
+                         color = color.hsv_to_rgb(vector (0.392, 0.801, 0.433)),
+                         )
+    seaweed_stem2 = cone(pos=vector(1.9,-9,45.4),
+                         axis=vector(0,1,0),
+                         size=vector(2.4,.76,.3),
+                         color = color.hsv_to_rgb(vector (0.364, 0.884, 0.741)),
+                         )
+    seaweed_stem3 = cone(pos=vector(2.3,-9,45.38),
+                         axis=vector(0,1,0),
+                         size=vector(2.3,.76,.3),
+                         color = color.hsv_to_rgb(vector (0.370, 0.599, 0.317)),
+                         )
+    seaweed_objects = [seaweed_base, seaweed_stem1, seaweed_stem2, seaweed_stem3]
+    
+    #create a compound to bind together
+    com_seaweed = compound(seaweed_objects, pos = starting_position)
+    com_seaweed.vel = starting_vel
+    
+    return com_seaweed
+
+def make_castle(starting_position, starting_vel = vec (0,0,0)): 
+    """This function creates the container object or compound, 
+       specifcally the stationary sandcastle obstacle 
+    """
+    castle_base = box(pos=vector(4,1,0.5),             
+                      axis=vector(0,0,1),
+                      size=vector(2,4,2), 
+                      color=color.hsv_to_rgb(vector (0.138, 1.000, 0.807))
+                      )
+    castle_tower1 = cylinder(pos=vector(3,.5,.35),
+                             axis=vector(0,3,0), 
+                             radius=.5,
+                             color=color.hsv_to_rgb(vector (0.138, 1.000, 0.807))
+                             )
+    castle_tower2 = cylinder(pos=vector(5,.5,.35),
+                             axis=vector(0,3,0), 
+                             radius=.5,
+                             color=color.hsv_to_rgb(vector (0.138, 1.000, 0.807))
+                             )
+    castle_top1 = cone(pos=vector(3,3.5,0.5),
+                       axis=vector(0,1,0),
+                       radius=.5,
+                       color=color.hsv_to_rgb(vector (0.138, 1.000, 0.807))
+                       )
+    
+    castle_top2 = cone(pos=vector(5,3.5,.35),
+                       axis=vector(0,1,0),
+                       radius=.5,
+                       color=color.hsv_to_rgb(vector (0.138, 1.000, 0.807))
+                       )
+                      
+    castle_objects = [castle_base, castle_tower1, castle_tower2, castle_top1, castle_top2]
+    
+     # creates a compound
+    com_castle = compound(castle_objects, pos = starting_position)
+    com_castle.vel = starting_vel
+    
+    return com_castle
+    
+def make_beachball(starting_position, starting_vel = vec (0,0,0)):
+    """
+        This function creates the container object or compound, 
+        specifcally the beachball obstacles that will be moving among 
+        the beach freely. 
+    """
+    beachball_ball = sphere(size = 1.0*vec(1, 1, 1),
+                        pos = vec(0, 2, 0),
+                        color = color.green
+                        )
+
+    # Make a list to "fuse" with a compound     
+    beachball_objects = [beachball_ball]
+    
+     # Now, we create a compound--we'll name it com_beachball:
+    com_beachball = compound(beachball_objects, pos = starting_position)
+    com_beachball.vel = starting_vel
+    
+    return com_beachball
+    
+def make_trash(starting_position, starting_vel = vec (0,0,0)):
+    """
+        This function creates the container object or compound, 
+        specifcally the stationary obstacle of trash, inspired 
+        by caltech
+    """
+    trash_can = cylinder(pos=vector(0,2,.25),
+                         axis=vector(0,3,0), 
+                         radius=1, 
+                         color=color.hsv_to_rgb(vector (0.094, 0.249, 0.294)),
+                         )
+    trash_label = text(text='caltech',
+                       align='center',
+                       color=color.orange, 
+                       pos=vector(0,3.8,1.2),
+                       height = .5)
+    trash_ring = ring(pos=vector(0,5,.25),
+                      axis=vector(0,1,0),
+                      radius=1, thickness=0.1,
+                      color = color.black)
+    # Make a list to "fuse" with a compound     
+    trash_objects = [trash_label, trash_can, trash_ring]
+    
+     # Now, we create a compound--we'll name it com_trash:
+    com_trash = compound(trash_objects, pos = starting_position)
+    com_trash.vel = starting_vel
+    
+    return com_trash
+    
+
+def make_umbrella(starting_position, starting_vel = vec (0,0,0)):
+    """
+        This function creates the container object or compound, 
+        specifcally the stationary obstacle of umbrella
+    """
+    umbrella_stem = cylinder(pos=vector(0,9,1),
+                             axis=vector(0,9,0),
+                             radius=.2,
+                             color = color.red)
+    umbrella_top = cone(pos=vector(0,16,1),
+                        axis=vector(0,2,0),
+                        radius=3)
+                        
+    # Make a list to "fuse" with a compound     
+    umbrella_objects = [umbrella_stem, umbrella_top]
+    
+     # Now, we create a compound--we'll name it com_umbrella:
+    com_umbrella = compound(umbrella_objects, pos = starting_position)
+    com_umbrella.vel = starting_vel
+    
+    return com_umbrella
+    
+    
+def make_turtle(starting_position, starting_vel = vec (0,0,0)):
+    """
+        This function creates the container object or compound, 
+        specifcally the main gamepiece of the turtle
+    """
+    turtle_body = ellipsoid(pos = vector(9, -7, 13), 
+                            width = -4,
+                            length = 4,
+                            height = .7,
+                            color = vector(1, 1, 0),
+                            make_trail=True
+                            )
+    turtle_Bshell = ellipsoid(pos = vector(9, -6.57, 13), 
+                             width = -4.2,
+                             length = 4.2,
+                             height = 1.1,
+                             color = vector(0, 1, 0)
+                            )
+    turtle_Tshell = ellipsoid(pos = vector(9, -6.26, 13), 
+                             width = -4.1,
+                             length = 4.1,
+                             height = 1.6,
+                             color=color.hsv_to_rgb(vector (0.103, 0.884, 0.388))
+                            )
+    turtle_head = sphere(pos=vector(9.1,-6.13,15), 
+                         radius=.75,
+                         color = vector(0.4, 1, 0)
+                        )
+    turtle_eye1 = sphere(pos=vector(9.55,-5.53,15.3), 
+                         radius=0.2,
+                         color = color.white
+                        )
+    turtle_eye2 = sphere(pos=vector(8.7,-5.53,15.3), 
+                         radius=0.2,
+                         color = color.white
+                        )
+    turtle_leg1 = ellipsoid(pos = vector(8, -7, 14), 
+                             width = -2.3,
+                             length = 1.3,
+                             height = 0.7,
+                             color=color.hsv_to_rgb(vector (0.254, 0.942, 0.770))
+                            )
+    turtle_leg2 =ellipsoid(pos = vector(8, -7, 12), 
+                             width = -2.3,
+                             length = 1.3,
+                             height = 0.7,
+                             color=color.hsv_to_rgb(vector (0.254, 0.942, 0.770))
+                            )
+    turtle_leg3 = ellipsoid(pos = vector(10, -7, 14), 
+                             width = -2.3,
+                             length = 1.3,
+                             height = 0.7,
+                             color=color.hsv_to_rgb(vector (0.254, 0.942, 0.770))
+                            )
+    turtle_leg4 = ellipsoid(pos = vector(10, -7, 12), 
+                             width = -2.3,
+                             length = 1.3,
+                             height = 0.7,
+                             color=color.hsv_to_rgb(vector (0.254, 0.942, 0.770))
+                            )
+    
+    # Make a list to "fuse" with a compound     
+    turtle_objects = [turtle_body, turtle_Bshell, turtle_Tshell, turtle_head, 
+                      turtle_eye1, turtle_eye2, turtle_leg1, turtle_leg2, 
+                      turtle_leg3, turtle_leg4]
+    
+     # Now, we create a compound--we'll name it com_turtle:
+    com_turtle = compound(turtle_objects, pos = starting_position)
+    com_turtle.vel = starting_vel
+    
+    return com_turtle
+
+
+
+
+#creates the beach portion of the gameboard
+ground = box(size = vec(20, 1, 60),
+             pos = vec(0, -1, 0),
+             #color=color.hsv_to_rgb(vector (0.161, 0.800, 1.000)),
+             color=color.white,
+             texture="https://i.imgur.com/Gbhwpmj.jpg",
+             shininess = 0.1
+             #texture="https://i.imgur.com/XVeV9Cq.jpeg"
+             )
+
+#creates the ocean floor that turtle will stop at
+ground2 =  box(size = vec(20, 1, 15),
+             pos = vec(0, -10, 37),
+             color=color.hsv_to_rgb(vector (0.127, 0.329, 1.000)),
+             texture = textures.stucco
+             )
+             
+#creates the ocean portion of the gameboard
+ocean =  box(size = vec(20, 10, 15),
+             pos = vec(0, -5, 37),
+             color=color.white,
+             opacity = .5,
+             texture = "https://i.imgur.com/6ECTlTe.jpg"
+             )
+             
+
+#creates a wall on the gameboard 
+wallA = box(pos = vec(0, 0, -30),
+            axis = vec(1, 0, 0),
+            size = vec(20, 1, .2),
+            color = vec(0,0,0)  #black
+            )
+
+#creates a wall on the gameboard 
+wallB = box(pos = vec(-10, 0, 7.5),
+            axis = vec(0, 0, 1),
+            size = vec(75, 1, .2),
+            color = color.black          #black
+            )
+
+#WallC makes the "invisible" wall that will let the code know when the turtle has made it to the ocean. 
+wallC = box(pos = vec(0, -1, 30), 
+            axis = vec(0, 0, 0),
+            size = vec(20, 1, .2),
+            color = color.blue,         #blue
+            opacity = 0
+            )
+
+#creates a wall on the gameboard 
+wallD = box(pos = vec(10, 0, 7.5),
+            axis = vec(0, 0, 1),
+            size = vec(75, 1, .2),
+            color = color.black         #black
+            )
+            
+#WallE is the wall at the end of the ocean, keeps turtle from falling into the void
+wallE = box(pos = vec(0, 0, 45),
+            axis = vec(0, 0, 0),
+            size = vec(20, 1, .2),
+            color = color.white         # white
+            )
+
+
+# +++ start of OBJECT_CREATION section
+
+#Below calls all of the above compounds from the beginning 
+#of the code and places them in the correct positions. 
+
+beachball1 = make_beachball(starting_position =13*vec.random(), 
+                    starting_vel = vec(10, 0, -7)               #gives ball random starting position
+                    )
+
+
+beachball2 = make_beachball(starting_position = 14*vec.random(),
+                    starting_vel = vec(10, 0, -7)               #gives ball random starting position
+                    )
+
+turtle = make_turtle(starting_position = vec(0, .5, -26), texture = textures.rough)
+
+umbrella1 = make_umbrella(starting_position = vec(-6.2, 1, 6))
+
+umbrella2 = make_umbrella(starting_position = vec(6.2, 1, 17))
+
+trash1 = make_trash (starting_position = vec(-2, 0, -10))
+
+trash2 = make_trash (starting_position = vec(4, 0, 5), texture = textures.stucco)
+
+castle1= make_castle (starting_position = vec(-3, 0, 26))
+
+castle2= make_castle (starting_position = vec(4, 0, -5))
+
+seaweed1 = make_seaweed (starting_position = vec(2, -8.1, 35))
+
+seaweed2 = make_seaweed (starting_position = vec(-5, -8.3, 31))
+
+seaweed3 = make_seaweed (starting_position = vec(4, -8.3, 39))
+
+seaweed4 = make_seaweed (starting_position = vec(-6, -8.3, 42))
+
+# +++ end of OBJECT_CREATION section
+
+
+# +++ start of ANIMATION section
+
+# Other constants
+RATE = 50                # The number of times the while loop runs each second
+dt = 1.0/(1.0*RATE)      # The time step each time through the while loop
+scene.autoscale = False  # Avoids changing the view automatically
+scene.forward = vec(0, -4, -3)  # Ask for a bird's-eye view of the scene...
+winBoo = False
+noCastle1 = False
+
+# This is the "event loop" or "animation loop"
+# Each pass through the loop will animate one step in time, dt
+while True:
+
+    rate(RATE)                              # Maximum number of times per second
+                                            # ..that the while loop runs
+    #if the balls starting y pos value is not equal to 0 change, have to add
+    #this since used random to decide starting position for beach balls 
+    
+    if beachball1.pos.y != 0:
+        beachball1.pos.y = 0
+         
+    if beachball1.pos.x <= -10.1:
+        beachball1.pos.x = 0
+        
+    if beachball1.pos.x >= 30.1:
+        beachball1.pos.x = 0
+        
+     #if the balls starting y pos value is not equal to 0 change, have to add
+    #this since used random to decide starting position for beach balls 
+    if beachball2.pos.y != 0:
+        beachball2.pos.y = 0
+    
+    if beachball2.pos.x <= -10.1:
+        beachball2.pos.x = 0
+        
+    if beachball2.pos.x >= 30.1:
+        beachball2.pos.x = 0
+        
+        
+    # +++ Start of PHYSICS UPDATES -- update all positions here, every time step
+
+    beachball1.pos = beachball1.pos + beachball1.vel*dt # Update the first beachball's position
+    beachball2.pos = beachball2.pos + beachball2.vel*dt #update the second beachball position 
+    turtle.pos = turtle.pos + turtle.vel*dt       # Update the turtle's position
+
+    # +++ End of PHYSICS UPDATES -- be sure new objects are updated appropriately!
+
+
+    # +++ Start of COLLISIONS -- check for collisions & do the "right" thing
+    corral_collide(turtle)
+    corral_collide(beachball1)
+    corral_collide(beachball2)
+    
+    # +++ Start of WIN -- check for WIN & do the "right" thing
+    win(turtle) 
+    # +++ end of WIN -- check for WIN & do the "right" thing
+    
+    #+++ Start of startgame -- check for WIN & do the "right" thing
+    startgame(turtle)
+    # +++ end of startgame -- check for WIN & do the "right" thing
+    
+        
+    #stops the turtle when it reaches bottom of ocean
+    if abs(turtle.pos.y - ground2.pos.y) < 1.0:           # check for y pos  
+        turtle.vel = vec(0,0,0) 
+    
+    # If the turtle collides with the first beachball, give the turtle
+    # a vertical velocity and turn red
+    if mag(turtle.pos - beachball1.pos) < 1.75:
+        print("the turtle got hurt!")
+        turtle.color = vec(1,0,0)
+        turtle.vel = vec(0, 3, 0)
+        
+    # If the turtle collides with the second beachball, give the turtle
+    # a vertical velocity and turn red
+    if mag(turtle.pos - beachball2.pos) < 1.75:
+        print("the turtle got hurt!")
+        turtle.color = vec(1,0,0)
+        turtle.vel = vec(0, 3, 0)
+    
+    # If the turtle collides with the first umbrella, give the turtle
+    # a vertical velocity and turn red
+    if mag(turtle.pos - umbrella1.pos) < 1.65:
+        print("the turtle got hurt!")
+        turtle.color = vec(1,0,0)
+        turtle.vel = vec(0, 3, 0)
+    
+    # If the turtle collides with the second umbrella, give the turtle
+    # a vertical velocity and turn red
+    if mag(turtle.pos - umbrella2.pos) < 1.65:
+        print("the turtle got hurt!")
+        turtle.color = vec(1,0,0)
+        turtle.vel = vec(0, 3, 0)
+    
+    # If the turtle collides with the first trash, give the turtle
+    # a vertical velocity and turn red
+    if mag(turtle.pos - trash1.pos) < 2.25:
+        print("the turtle got hurt!")
+        turtle.color = vec(1,0,0)
+        turtle.vel = vec(0, 3, 0)
+    
+    # If the turtle collides with the second trash, give the turtle
+    # a vertical velocity and turn red
+    if mag(turtle.pos - trash2.pos) < 2.25:
+        print("the turtle got hurt!")
+        turtle.color = vec(1,0,0)
+        turtle.vel = vec(0, 3, 0)
+    
+    # If the turtle collides with the sand castle and it has 
+    #been destroyed already returns message
+    if mag(turtle.pos - castle1.pos) < 2.5 and castle1.opacity == 0:
+        print("good the sandcastle was destroyed!")
+    
+    #if turtle hits castle1 and it has not been destoryed, gives turtle 
+    #veritcal velocity and turns red
+    if mag(turtle.pos - castle1.pos) < 2.5 and castle1.opacity == 1:
+        print("the turtle got hurt!")
+        turtle.color = vec(1,0,0)
+        turtle.vel = vec(0, 3, 0)
+    
+    #if castle1 has already been destroyed and area gets hit again returns message
+    #to notify users it has already been hit
+    if mag(beachball1.pos - castle1.pos) < 2.5 and castle1.opacity == 0:
+        print("already destoryed the castle oops!")
+    
+    #if castle1 has already been destroyed and area gets hit again returns message
+    #to notify users it has already been hit
+    if mag(beachball2.pos - castle1.pos) < 2.5 and castle1.opacity == 0:
+        print("already destoryed the castle oops!")
+    
+    #if beachball hits sandcastle changes the velocity of ball to
+    #bounce back and destroys castle
+    if mag(beachball1.pos - castle1.pos) < 2.5 and castle1.opacity == 1:
+        beachball1.vel.x *= -1.0
+        beachball1.vel.z *= -1.0
+        castle1.opacity = 0
+        print("Sandcastle destroyed! 1")
+        
+     #if beachball hits sandcastle changes the velocity of ball to
+    #bounce back
+    if mag(beachball2.pos - castle1.pos) < 2.5 and castle1.opacity == 1:
+        beachball2.vel.x *= -1.0
+        beachball2.vel.z *= -1.0
+        castle1.opacity = 0
+        print("Sandcastle destroyed! 2")
+   
+    # If the turtle collides with the sand castle and it has 
+    #been destroyed already returns message
+    if mag(turtle.pos - castle2.pos) < 2.5 and castle2.opacity == 0:
+        print("good the sandcastle was destroyed!")
+        #castle.pos = vec(100,50,100)
+    
+    #if turtle hits castle1 and it has not been destoryed, gives turtle 
+    #veritcal velocity and turns red
+    if mag(turtle.pos - castle2.pos) < 2.5 and castle2.opacity == 1:
+        print("the turtle got hurt!")
+        turtle.color = vec(1,0,0)
+        turtle.vel = vec(0, 3, 0)
+    
+    #if castle1 has already been destroyed and area gets hit again returns message
+    #to notify users it has already been hit
+    if mag(beachball1.pos - castle2.pos) < 2.5 and castle2.opacity == 0:
+        print("already destoryed the castle oops!")
+    
+    #if castle1 has already been destroyed and area gets hit again returns message
+    #to notify users it has already been hit
+    if mag(beachball2.pos - castle2.pos) < 2.5 and castle2.opacity == 0:
+        print("already destoryed the castle oops!")
+    
+    #if beachball hits sandcastle changes the velocity of ball to
+    #bounce back and destroys castle
+    if mag(beachball1.pos - castle2.pos) < 2.5 and castle2.opacity == 1:
+        beachball1.vel.x *= -1.0
+        beachball1.vel.z *= -1.0
+        castle2.opacity = 0
+        print("Sandcastle destroyed! 1")
+        
+     #if beachball hits sandcastle changes the velocity of ball to
+    #bounce back
+    if mag(beachball2.pos - castle2.pos) < 2.5 and castle2.opacity == 1:
+        beachball2.vel.x *= -1.0
+        beachball2.vel.z *= -1.0
+        castle2.opacity = 0
+        print("Sandcastle destroyed! 2")
+
+        
+    #if beachball hits umbrella changes the velocity of ball to
+    #bounce back
+    if mag(beachball1.pos - umbrella1.pos) < 1.65:
+        beachball1.vel.x *= -1.0
+        beachball1.vel.z *= -1.0
+    
+    #if beachball hits umbrella changes the velocity of ball to
+    #bounce back
+    if mag(beachball1.pos - umbrella2.pos) < 1.65:
+        beachball1.vel.x *= -1.0
+        beachball1.vel.z *= -1.0
+    
+    #if beachball hits trash changes the velocity of ball to
+    #bounce back
+    if mag(beachball1.pos - trash1.pos) < 2.25:
+        beachball1.vel.x *= -1.0
+        beachball1.vel.z *= -1.0
+        beachball1.pos = trash1.pos + 2.26*hat(beachball1.pos - trash1.pos)
+    
+    #if beachball hits trash changes the velocity of ball to
+    #bounce back
+    if mag(beachball1.pos - trash2.pos) < 2.25:
+        beachball1.vel.x *= -1.0
+        beachball1.vel.z *= -1.0
+        beachball1.pos = trash2.pos + 2.26*hat(beachball1.pos - trash2.pos)
+        
+    #if beachball hits umbrella changes the velocity of ball to
+    #bounce back   
+    if mag(beachball2.pos - umbrella1.pos) < 1.65:
+        beachball2.vel.x *= -1.0
+        beachball2.vel.z *= -1.0
+    
+     #if beachball hits umbrella changes the velocity of ball to
+    #bounce back   
+    if mag(beachball2.pos - umbrella2.pos) < 1.65:
+        beachball2.vel.x *= -1.0
+        beachball2.vel.z *= -1.0
+     
+     #if beachball hits trash changes the velocity of ball to
+    #bounce back   
+    if mag(beachball2.pos - trash1.pos) < 2.25:
+        beachball2.vel.x *= -1.0
+        beachball2.vel.z *= -1.0
+        beachball2.pos = trash1.pos + 2.26*hat(beachball2.pos - trash1.pos)
+    
+     #if beachball hits trash changes the velocity of ball to
+    #bounce back   
+    if mag(beachball2.pos - trash2.pos) < 2.25:
+        beachball2.vel.x *= -1.0
+        beachball2.vel.z *= -1.0
+        beachball2.pos = trash2.pos + 2.26*hat(beachball2.pos - trash2.pos)
+   
+    # +++ End of COLLISIONS
+
+
+
+# +++ Start of EVENT-HANDLING section--separate functions for
+#                                keypresses and mouse clicks...
+
+def keydown_fun(event):
+    """This function is called each time a key is pressed."""
+    key = event.key
+    ri = randint(0, 10)
+    amount = 0.44               # "Strength" of the keypress's velocity changes
+    
+    if key == 'up' or key in 'wWiI':
+        turtle.vel = turtle.vel + vec(0, 0, -amount)
+    elif key == 'left' or key in 'aAjJ':
+        turtle.vel = turtle.vel + vec(-amount, 0, 0)
+    elif key == 'down' or key in 'sSkK':
+        turtle.vel = turtle.vel + vec(0, 0, amount)
+    elif key == 'right' or key in "dDlL":
+        turtle.vel = turtle.vel + vec(amount, 0, 0)
+    elif key in ' rR' and turtle.color == vec(1,0,0):
+        print("spooky turtles chance to play!")
+        turtle.vel = vec(0, 0, 0) # Reset! via R or the spacebar, " "
+        turtle.pos = vec(0, .5, -26)
+        turtle.color = vec(0,0,0)
+    
+
+def click_fun(event):
+    """This function is called each time the mouse is clicked."""
+    print("event is", event.event, event.which)
+
+# +++ End of EVENT-HANDLING section
+
+# +++ Other functions can go here...
+def win(turtle): 
+    """
+    tells the user they won, if balls hits wallc
+    and allows turtle to sink into ocean 
+    """
+    global winBoo
+    if turtle.pos.z > wallC.pos.z:           # Hit--check for z
+        #print(winBoo)
+        if winBoo == False:
+            print("The turtle has reached the ocean!!") # Prints win statement
+            winBoo = True
+            turtle.vel = vec(0, -1, 1)
+        
+def startgame(turtle): #gets rid of rules label 
+    if turtle.pos != vec(0, .5, -26):
+        temprules.visible = False
+
+
+        
+def randfloat( low, hi ):
+    """ implements a random number generator for FLOAT values
+        between low and hi (since it's float, it doesn't matter
+        if it's inclusive or exclusive of the right-hand endpoint
+    """
+    if hi < low: low, hi = hi, low  # swap if out of order!
+    random_float_value = (hi-low)*random()
+    return low + random_float_value
+        
+def choice(L):
+    """Implements Python's choice using the random() function."""
+    LEN = len(L)                        # Get the length
+    randomindex = int(LEN*random())     # Get a random index
+    return L[randomindex]               # Return that element
+
+def randint(low, hi):
+    """Implements Python's randint using the random() function.
+       returns an int from low to hi _inclusive_ (so, it's not 100% Pythonic)
+    """
+    if hi < low:
+        low, hi = hi, low               # Swap if out of order!
+    LEN = int(hi) - int(low) + 1.       # Get the span and add 1
+    randvalue = LEN*random() + int(low) # Get a random value
+    return int(randvalue)               # Return the integer part of it
+
+def randcolor():
+    """Returns a vector of (r, g, b) random from 0.0 to 1.0."""
+    r = random()           # This is different than Python's random.uniform
+    g = random()           # ..it automatically uses 0.0 to 1.0
+    b = random()
+    return vec(r, g, b)                 # A color is a three-element vector
+    
+    
+def corral_collide(turtle):
+    """Corral collisions!
+       turtle must have a .vel field and a .pos field.
+       keeps the turtle and alien within the corral 
+    """
+    # If the turtle hits wallA
+    if turtle.pos.z < wallA.pos.z:           # Hit--check for z
+        turtle.pos.z = wallA.pos.z           # Bring back into bounds
+        turtle.vel.z *= -1.0                 # Reverse the z velocity
+
+    # If the turtle hits wallB
+    if turtle.pos.x < wallB.pos.x:           # Hit--check for x
+        turtle.pos.x = wallB.pos.x           # Bring back into bounds
+        turtle.vel.x *= -1.6                 # Reverse the x velocity
+   
+    #if turtle hits wallD
+    if turtle.pos.x > wallD.pos.x:           # Hit--check for x
+        turtle.pos.x = wallD.pos.x           # Bring back into bounds
+        turtle.vel.x *= -1.6 
+    
+    # If the turtle hits wallB
+    if beachball1.pos.x < wallB.pos.x:           # Hit--check for x
+        beachball1.pos.x = wallB.pos.x           # Bring back into bounds
+        beachball1.vel.x *= -1.0                 # Reverse the x velocity
+   
+    #if turtle hits wallD
+    if beachball1.pos.x > wallD.pos.x:           # Hit--check for x
+        beachball1.pos.x = wallD.pos.x           # Bring back into bounds
+        beachball1.vel.x *= -1.0   
+    
+     # If the turtle hits wallB
+    if beachball2.pos.x < wallB.pos.x:           # Hit--check for x
+        beachball2.pos.x = wallB.pos.x           # Bring back into bounds
+        beachball2.vel.x *= -1.0                 # Reverse the x velocity
+   
+    #if turtle hits wallD
+    if beachball2.pos.x > wallD.pos.x:           # Hit--check for x
+        beachball2.pos.x = wallD.pos.x           # Bring back into bounds
+        beachball2.vel.x *= -1.0   
+
+
+   #if turtle hits walle
+    if turtle.pos.z > wallE.pos.z:           # Hit--check for z
+        turtle.pos.z = wallE.pos.z           # Bring back into beach area
+        turtle.vel.z *= -1.0                 # Reverse the x velocity
+    
+    #If beachball hits start of ocean
+    if beachball1.pos.z > wallC.pos.z:           # Hit--check for z
+        beachball1.pos.z = wallC.pos.z           # Bring back into beach area
+        beachball1.vel.z *= -1.0 
+    
+    #If beachball hits ocean
+    if beachball2.pos.z > wallC.pos.z:           # Hit--check for z
+        beachball2.pos.z = wallC.pos.z           # Bring back into beach area
+        beachball2.vel.z *= -1.0 
+        
+    #if turtle hits end of ocean 
+    if turtle.pos.z == wallE.pos.z - 4:           # Hit--check for z
+        turtle.vel.z = 0 
+        
+GlowScript 3.2 VPython
+
+# +++ BUILDING SCENE
+scene.bind('keydown', keydown_fun)     # Function for key presses
+scene.background = color.hsv_to_rgb(vector (0.053, 0.007, 0.890))   # Light gray using Glowscript IDE
+scene.width = 740                      
+scene.height = 580
+scene.ambient=color.gray(0.8) 
+
+temprules = label(pos=vec(-45,0,-20), text="""
+- Use the arrow keys to operate the turtle
+- If you hit any obstacles the turtle gets hurt!
+- If the beachballs knock over the castle the castle no longer exists 
+- If the turtle gets hurt you can hit the "r" key to reincarnate the turtle!""", 
+        color =color.hsv_to_rgb(vector (0.514, 1.000, 0.641)),
+        linecolor =color.hsv_to_rgb(vector (0.783, -4.664, 0.602)),
+        align = 'left',
+        height=20
+        )
+
+
+
+mainlabel = label( pos=vec(25,12,-35), text="""
+            Save the turtle! 
+            avoid the TRASH(caltech), 
+            umbrellas, sandcastle and beachballs!""", 
+        color =color.hsv_to_rgb(vector (0.514, 1.000, 0.641)),
+        align = 'center',
+        box = False,
+        opacity = 0
+        )
+
+# +++ END BUILDING SCENE
+
+# +++ start of OBJECT_CREATION section
+# These functions create "container" objects, called "compounds"
+
+def make_seaweed(starting_position, starting_vel = vec (0,0,0)): 
+    """
+    Makes seaweed at base of ocean :)
+    """
+    seaweed_base = ellipsoid(pos = vector(2.2, -9, 45), 
+                            width = -1.5,
+                            length = 2,
+                            height = .1,
+                            color = color.hsv_to_rgb(vector (0.131, 1.000, 0.256)),
+                            ) 
+    seaweed_stem1 = cone(pos=vector(2.1,-9,45.33),
+                         axis=vector(0,1,0),
+                         size=vector(2.15,.76,.3),
+                         color = color.hsv_to_rgb(vector (0.392, 0.801, 0.433)),
+                         )
+    seaweed_stem2 = cone(pos=vector(1.9,-9,45.4),
+                         axis=vector(0,1,0),
+                         size=vector(2.4,.76,.3),
+                         color = color.hsv_to_rgb(vector (0.364, 0.884, 0.741)),
+                         )
+    seaweed_stem3 = cone(pos=vector(2.3,-9,45.38),
+                         axis=vector(0,1,0),
+                         size=vector(2.3,.76,.3),
+                         color = color.hsv_to_rgb(vector (0.370, 0.599, 0.317)),
+                         )
+    seaweed_objects = [seaweed_base, seaweed_stem1, seaweed_stem2, seaweed_stem3]
+    
+    #create a compound to bind together
+    com_seaweed = compound(seaweed_objects, pos = starting_position)
+    com_seaweed.vel = starting_vel
+    
+    return com_seaweed
+
+def make_castle(starting_position, starting_vel = vec (0,0,0)): 
+    """This function creates the container object or compound, 
+       specifcally the stationary sandcastle obstacle 
+    """
+    castle_base = box(pos=vector(4,1,0.5),             
+                      axis=vector(0,0,1),
+                      size=vector(2,4,2), 
+                      color=color.hsv_to_rgb(vector (0.138, 1.000, 0.807))
+                      )
+    castle_tower1 = cylinder(pos=vector(3,.5,.35),
+                             axis=vector(0,3,0), 
+                             radius=.5,
+                             color=color.hsv_to_rgb(vector (0.138, 1.000, 0.807))
+                             )
+    castle_tower2 = cylinder(pos=vector(5,.5,.35),
+                             axis=vector(0,3,0), 
+                             radius=.5,
+                             color=color.hsv_to_rgb(vector (0.138, 1.000, 0.807))
+                             )
+    castle_top1 = cone(pos=vector(3,3.5,0.5),
+                       axis=vector(0,1,0),
+                       radius=.5,
+                       color=color.hsv_to_rgb(vector (0.138, 1.000, 0.807))
+                       )
+    
+    castle_top2 = cone(pos=vector(5,3.5,.35),
+                       axis=vector(0,1,0),
+                       radius=.5,
+                       color=color.hsv_to_rgb(vector (0.138, 1.000, 0.807))
+                       )
+                      
+    castle_objects = [castle_base, castle_tower1, castle_tower2, castle_top1, castle_top2]
+    
+     # creates a compound
+    com_castle = compound(castle_objects, pos = starting_position)
+    com_castle.vel = starting_vel
+    
+    return com_castle
+    
+def make_beachball(starting_position, starting_vel = vec (0,0,0)):
+    """
+        This function creates the container object or compound, 
+        specifcally the beachball obstacles that will be moving among 
+        the beach freely. 
+    """
+    beachball_ball = sphere(size = 1.0*vec(1, 1, 1),
+                        pos = vec(0, 2, 0),
+                        color = color.green
+                        )
+
+    # Make a list to "fuse" with a compound     
+    beachball_objects = [beachball_ball]
+    
+     # Now, we create a compound--we'll name it com_beachball:
+    com_beachball = compound(beachball_objects, pos = starting_position)
+    com_beachball.vel = starting_vel
+    
+    return com_beachball
+    
+def make_trash(starting_position, starting_vel = vec (0,0,0)):
+    """
+        This function creates the container object or compound, 
+        specifcally the stationary obstacle of trash, inspired 
+        by caltech
+    """
+    trash_can = cylinder(pos=vector(0,2,.25),
+                         axis=vector(0,3,0), 
+                         radius=1, 
+                         color=color.hsv_to_rgb(vector (0.094, 0.249, 0.294)),
+                         )
+    trash_label = text(text='caltech',
+                       align='center',
+                       color=color.orange, 
+                       pos=vector(0,3.8,1.2),
+                       height = .5)
+    trash_ring = ring(pos=vector(0,5,.25),
+                      axis=vector(0,1,0),
+                      radius=1, thickness=0.1,
+                      color = color.black)
+    # Make a list to "fuse" with a compound     
+    trash_objects = [trash_label, trash_can, trash_ring]
+    
+     # Now, we create a compound--we'll name it com_trash:
+    com_trash = compound(trash_objects, pos = starting_position)
+    com_trash.vel = starting_vel
+    
+    return com_trash
+    
+
+def make_umbrella(starting_position, starting_vel = vec (0,0,0)):
+    """
+        This function creates the container object or compound, 
+        specifcally the stationary obstacle of umbrella
+    """
+    umbrella_stem = cylinder(pos=vector(0,9,1),
+                             axis=vector(0,9,0),
+                             radius=.2,
+                             color = color.red)
+    umbrella_top = cone(pos=vector(0,16,1),
+                        axis=vector(0,2,0),
+                        radius=3)
+                        
+    # Make a list to "fuse" with a compound     
+    umbrella_objects = [umbrella_stem, umbrella_top]
+    
+     # Now, we create a compound--we'll name it com_umbrella:
+    com_umbrella = compound(umbrella_objects, pos = starting_position)
+    com_umbrella.vel = starting_vel
+    
+    return com_umbrella
+    
+    
+def make_turtle(starting_position, starting_vel = vec (0,0,0)):
+    """
+        This function creates the container object or compound, 
+        specifcally the main gamepiece of the turtle
+    """
+    turtle_body = ellipsoid(pos = vector(9, -7, 13), 
+                            width = -4,
+                            length = 4,
+                            height = .7,
+                            color = vector(1, 1, 0),
+                            make_trail=True
+                            )
+    turtle_Bshell = ellipsoid(pos = vector(9, -6.57, 13), 
+                             width = -4.2,
+                             length = 4.2,
+                             height = 1.1,
+                             color = vector(0, 1, 0)
+                            )
+    turtle_Tshell = ellipsoid(pos = vector(9, -6.26, 13), 
+                             width = -4.1,
+                             length = 4.1,
+                             height = 1.6,
+                             color=color.hsv_to_rgb(vector (0.103, 0.884, 0.388))
+                            )
+    turtle_head = sphere(pos=vector(9.1,-6.13,15), 
+                         radius=.75,
+                         color = vector(0.4, 1, 0)
+                        )
+    turtle_eye1 = sphere(pos=vector(9.55,-5.53,15.3), 
+                         radius=0.2,
+                         color = color.white
+                        )
+    turtle_eye2 = sphere(pos=vector(8.7,-5.53,15.3), 
+                         radius=0.2,
+                         color = color.white
+                        )
+    turtle_leg1 = ellipsoid(pos = vector(8, -7, 14), 
+                             width = -2.3,
+                             length = 1.3,
+                             height = 0.7,
+                             color=color.hsv_to_rgb(vector (0.254, 0.942, 0.770))
+                            )
+    turtle_leg2 =ellipsoid(pos = vector(8, -7, 12), 
+                             width = -2.3,
+                             length = 1.3,
+                             height = 0.7,
+                             color=color.hsv_to_rgb(vector (0.254, 0.942, 0.770))
+                            )
+    turtle_leg3 = ellipsoid(pos = vector(10, -7, 14), 
+                             width = -2.3,
+                             length = 1.3,
+                             height = 0.7,
+                             color=color.hsv_to_rgb(vector (0.254, 0.942, 0.770))
+                            )
+    turtle_leg4 = ellipsoid(pos = vector(10, -7, 12), 
+                             width = -2.3,
+                             length = 1.3,
+                             height = 0.7,
+                             color=color.hsv_to_rgb(vector (0.254, 0.942, 0.770))
+                            )
+    
+    # Make a list to "fuse" with a compound     
+    turtle_objects = [turtle_body, turtle_Bshell, turtle_Tshell, turtle_head, 
+                      turtle_eye1, turtle_eye2, turtle_leg1, turtle_leg2, 
+                      turtle_leg3, turtle_leg4]
+    
+     # Now, we create a compound--we'll name it com_turtle:
+    com_turtle = compound(turtle_objects, pos = starting_position)
+    com_turtle.vel = starting_vel
+    
+    return com_turtle
+
+
+
+
+#creates the beach portion of the gameboard
+ground = box(size = vec(20, 1, 60),
+             pos = vec(0, -1, 0),
+             #color=color.hsv_to_rgb(vector (0.161, 0.800, 1.000)),
+             color=color.white,
+             texture="https://i.imgur.com/Gbhwpmj.jpg",
+             shininess = 0.1
+             #texture="https://i.imgur.com/XVeV9Cq.jpeg"
+             )
+
+#creates the ocean floor that turtle will stop at
+ground2 =  box(size = vec(20, 1, 15),
+             pos = vec(0, -10, 37),
+             color=color.hsv_to_rgb(vector (0.127, 0.329, 1.000)),
+             texture = textures.stucco
+             )
+             
+#creates the ocean portion of the gameboard
+ocean =  box(size = vec(20, 10, 15),
+             pos = vec(0, -5, 37),
+             color=color.white,
+             opacity = .5,
+             texture = "https://i.imgur.com/6ECTlTe.jpg"
+             )
+             
+
+#creates a wall on the gameboard 
+wallA = box(pos = vec(0, 0, -30),
+            axis = vec(1, 0, 0),
+            size = vec(20, 1, .2),
+            color = vec(0,0,0)  #black
+            )
+
+#creates a wall on the gameboard 
+wallB = box(pos = vec(-10, 0, 7.5),
+            axis = vec(0, 0, 1),
+            size = vec(75, 1, .2),
+            color = color.black          #black
+            )
+
+#WallC makes the "invisible" wall that will let the code know when the turtle has made it to the ocean. 
+wallC = box(pos = vec(0, -1, 30), 
+            axis = vec(0, 0, 0),
+            size = vec(20, 1, .2),
+            color = color.blue,         #blue
+            opacity = 0
+            )
+
+#creates a wall on the gameboard 
+wallD = box(pos = vec(10, 0, 7.5),
+            axis = vec(0, 0, 1),
+            size = vec(75, 1, .2),
+            color = color.black         #black
+            )
+            
+#WallE is the wall at the end of the ocean, keeps turtle from falling into the void
+wallE = box(pos = vec(0, 0, 45),
+            axis = vec(0, 0, 0),
+            size = vec(20, 1, .2),
+            color = color.white         # white
+            )
+
+
+# +++ start of OBJECT_CREATION section
+
+#Below calls all of the above compounds from the beginning 
+#of the code and places them in the correct positions. 
+
+beachball1 = make_beachball(starting_position =13*vec.random(), 
+                    starting_vel = vec(10, 0, -7)               #gives ball random starting position
+                    )
+
+
+beachball2 = make_beachball(starting_position = 14*vec.random(),
+                    starting_vel = vec(10, 0, -7)               #gives ball random starting position
+                    )
+
+turtle = make_turtle(starting_position = vec(0, .5, -26), texture = textures.rough)
+
+umbrella1 = make_umbrella(starting_position = vec(-6.2, 1, 6))
+
+umbrella2 = make_umbrella(starting_position = vec(6.2, 1, 17))
+
+trash1 = make_trash (starting_position = vec(-2, 0, -10))
+
+trash2 = make_trash (starting_position = vec(4, 0, 5), texture = textures.stucco)
+
+castle1= make_castle (starting_position = vec(-3, 0, 26))
+
+castle2= make_castle (starting_position = vec(4, 0, -5))
+
+seaweed1 = make_seaweed (starting_position = vec(2, -8.1, 35))
+
+seaweed2 = make_seaweed (starting_position = vec(-5, -8.3, 31))
+
+seaweed3 = make_seaweed (starting_position = vec(4, -8.3, 39))
+
+seaweed4 = make_seaweed (starting_position = vec(-6, -8.3, 42))
+
+# +++ end of OBJECT_CREATION section
+
+
+# +++ start of ANIMATION section
+
+# Other constants
+RATE = 50                # The number of times the while loop runs each second
+dt = 1.0/(1.0*RATE)      # The time step each time through the while loop
+scene.autoscale = False  # Avoids changing the view automatically
+scene.forward = vec(0, -4, -3)  # Ask for a bird's-eye view of the scene...
+winBoo = False
+noCastle1 = False
+
+# This is the "event loop" or "animation loop"
+# Each pass through the loop will animate one step in time, dt
+while True:
+
+    rate(RATE)                              # Maximum number of times per second
+                                            # ..that the while loop runs
+    #if the balls starting y pos value is not equal to 0 change, have to add
+    #this since used random to decide starting position for beach balls 
+    
+    if beachball1.pos.y != 0:
+        beachball1.pos.y = 0
+         
+    if beachball1.pos.x <= -10.1:
+        beachball1.pos.x = 0
+        
+    if beachball1.pos.x >= 30.1:
+        beachball1.pos.x = 0
+        
+     #if the balls starting y pos value is not equal to 0 change, have to add
+    #this since used random to decide starting position for beach balls 
+    if beachball2.pos.y != 0:
+        beachball2.pos.y = 0
+    
+    if beachball2.pos.x <= -10.1:
+        beachball2.pos.x = 0
+        
+    if beachball2.pos.x >= 30.1:
+        beachball2.pos.x = 0
+        
+        
+    # +++ Start of PHYSICS UPDATES -- update all positions here, every time step
+
+    beachball1.pos = beachball1.pos + beachball1.vel*dt # Update the first beachball's position
+    beachball2.pos = beachball2.pos + beachball2.vel*dt #update the second beachball position 
+    turtle.pos = turtle.pos + turtle.vel*dt       # Update the turtle's position
+
+    # +++ End of PHYSICS UPDATES -- be sure new objects are updated appropriately!
+
+
+    # +++ Start of COLLISIONS -- check for collisions & do the "right" thing
+    corral_collide(turtle)
+    corral_collide(beachball1)
+    corral_collide(beachball2)
+    
+    # +++ Start of WIN -- check for WIN & do the "right" thing
+    win(turtle) 
+    # +++ end of WIN -- check for WIN & do the "right" thing
+    
+    #+++ Start of startgame -- check for WIN & do the "right" thing
+    startgame(turtle)
+    # +++ end of startgame -- check for WIN & do the "right" thing
+    
+        
+    #stops the turtle when it reaches bottom of ocean
+    if abs(turtle.pos.y - ground2.pos.y) < 1.0:           # check for y pos  
+        turtle.vel = vec(0,0,0) 
+    
+    # If the turtle collides with the first beachball, give the turtle
+    # a vertical velocity and turn red
+    if mag(turtle.pos - beachball1.pos) < 1.75:
+        print("the turtle got hurt!")
+        turtle.color = vec(1,0,0)
+        turtle.vel = vec(0, 3, 0)
+        
+    # If the turtle collides with the second beachball, give the turtle
+    # a vertical velocity and turn red
+    if mag(turtle.pos - beachball2.pos) < 1.75:
+        print("the turtle got hurt!")
+        turtle.color = vec(1,0,0)
+        turtle.vel = vec(0, 3, 0)
+    
+    # If the turtle collides with the first umbrella, give the turtle
+    # a vertical velocity and turn red
+    if mag(turtle.pos - umbrella1.pos) < 1.65:
+        print("the turtle got hurt!")
+        turtle.color = vec(1,0,0)
+        turtle.vel = vec(0, 3, 0)
+    
+    # If the turtle collides with the second umbrella, give the turtle
+    # a vertical velocity and turn red
+    if mag(turtle.pos - umbrella2.pos) < 1.65:
+        print("the turtle got hurt!")
+        turtle.color = vec(1,0,0)
+        turtle.vel = vec(0, 3, 0)
+    
+    # If the turtle collides with the first trash, give the turtle
+    # a vertical velocity and turn red
+    if mag(turtle.pos - trash1.pos) < 2.25:
+        print("the turtle got hurt!")
+        turtle.color = vec(1,0,0)
+        turtle.vel = vec(0, 3, 0)
+    
+    # If the turtle collides with the second trash, give the turtle
+    # a vertical velocity and turn red
+    if mag(turtle.pos - trash2.pos) < 2.25:
+        print("the turtle got hurt!")
+        turtle.color = vec(1,0,0)
+        turtle.vel = vec(0, 3, 0)
+    
+    # If the turtle collides with the sand castle and it has 
+    #been destroyed already returns message
+    if mag(turtle.pos - castle1.pos) < 2.5 and castle1.opacity == 0:
+        print("good the sandcastle was destroyed!")
+    
+    #if turtle hits castle1 and it has not been destoryed, gives turtle 
+    #veritcal velocity and turns red
+    if mag(turtle.pos - castle1.pos) < 2.5 and castle1.opacity == 1:
+        print("the turtle got hurt!")
+        turtle.color = vec(1,0,0)
+        turtle.vel = vec(0, 3, 0)
+    
+    #if castle1 has already been destroyed and area gets hit again returns message
+    #to notify users it has already been hit
+    if mag(beachball1.pos - castle1.pos) < 2.5 and castle1.opacity == 0:
+        print("already destoryed the castle oops!")
+    
+    #if castle1 has already been destroyed and area gets hit again returns message
+    #to notify users it has already been hit
+    if mag(beachball2.pos - castle1.pos) < 2.5 and castle1.opacity == 0:
+        print("already destoryed the castle oops!")
+    
+    #if beachball hits sandcastle changes the velocity of ball to
+    #bounce back and destroys castle
+    if mag(beachball1.pos - castle1.pos) < 2.5 and castle1.opacity == 1:
+        beachball1.vel.x *= -1.0
+        beachball1.vel.z *= -1.0
+        castle1.opacity = 0
+        print("Sandcastle destroyed! 1")
+        
+     #if beachball hits sandcastle changes the velocity of ball to
+    #bounce back
+    if mag(beachball2.pos - castle1.pos) < 2.5 and castle1.opacity == 1:
+        beachball2.vel.x *= -1.0
+        beachball2.vel.z *= -1.0
+        castle1.opacity = 0
+        print("Sandcastle destroyed! 2")
+   
+    # If the turtle collides with the sand castle and it has 
+    #been destroyed already returns message
+    if mag(turtle.pos - castle2.pos) < 2.5 and castle2.opacity == 0:
+        print("good the sandcastle was destroyed!")
+        #castle.pos = vec(100,50,100)
+    
+    #if turtle hits castle1 and it has not been destoryed, gives turtle 
+    #veritcal velocity and turns red
+    if mag(turtle.pos - castle2.pos) < 2.5 and castle2.opacity == 1:
+        print("the turtle got hurt!")
+        turtle.color = vec(1,0,0)
+        turtle.vel = vec(0, 3, 0)
+    
+    #if castle1 has already been destroyed and area gets hit again returns message
+    #to notify users it has already been hit
+    if mag(beachball1.pos - castle2.pos) < 2.5 and castle2.opacity == 0:
+        print("already destoryed the castle oops!")
+    
+    #if castle1 has already been destroyed and area gets hit again returns message
+    #to notify users it has already been hit
+    if mag(beachball2.pos - castle2.pos) < 2.5 and castle2.opacity == 0:
+        print("already destoryed the castle oops!")
+    
+    #if beachball hits sandcastle changes the velocity of ball to
+    #bounce back and destroys castle
+    if mag(beachball1.pos - castle2.pos) < 2.5 and castle2.opacity == 1:
+        beachball1.vel.x *= -1.0
+        beachball1.vel.z *= -1.0
+        castle2.opacity = 0
+        print("Sandcastle destroyed! 1")
+        
+     #if beachball hits sandcastle changes the velocity of ball to
+    #bounce back
+    if mag(beachball2.pos - castle2.pos) < 2.5 and castle2.opacity == 1:
+        beachball2.vel.x *= -1.0
+        beachball2.vel.z *= -1.0
+        castle2.opacity = 0
+        print("Sandcastle destroyed! 2")
+
+        
+    #if beachball hits umbrella changes the velocity of ball to
+    #bounce back
+    if mag(beachball1.pos - umbrella1.pos) < 1.65:
+        beachball1.vel.x *= -1.0
+        beachball1.vel.z *= -1.0
+    
+    #if beachball hits umbrella changes the velocity of ball to
+    #bounce back
+    if mag(beachball1.pos - umbrella2.pos) < 1.65:
+        beachball1.vel.x *= -1.0
+        beachball1.vel.z *= -1.0
+    
+    #if beachball hits trash changes the velocity of ball to
+    #bounce back
+    if mag(beachball1.pos - trash1.pos) < 2.25:
+        beachball1.vel.x *= -1.0
+        beachball1.vel.z *= -1.0
+        beachball1.pos = trash1.pos + 2.26*hat(beachball1.pos - trash1.pos)
+    
+    #if beachball hits trash changes the velocity of ball to
+    #bounce back
+    if mag(beachball1.pos - trash2.pos) < 2.25:
+        beachball1.vel.x *= -1.0
+        beachball1.vel.z *= -1.0
+        beachball1.pos = trash2.pos + 2.26*hat(beachball1.pos - trash2.pos)
+        
+    #if beachball hits umbrella changes the velocity of ball to
+    #bounce back   
+    if mag(beachball2.pos - umbrella1.pos) < 1.65:
+        beachball2.vel.x *= -1.0
+        beachball2.vel.z *= -1.0
+    
+     #if beachball hits umbrella changes the velocity of ball to
+    #bounce back   
+    if mag(beachball2.pos - umbrella2.pos) < 1.65:
+        beachball2.vel.x *= -1.0
+        beachball2.vel.z *= -1.0
+     
+     #if beachball hits trash changes the velocity of ball to
+    #bounce back   
+    if mag(beachball2.pos - trash1.pos) < 2.25:
+        beachball2.vel.x *= -1.0
+        beachball2.vel.z *= -1.0
+        beachball2.pos = trash1.pos + 2.26*hat(beachball2.pos - trash1.pos)
+    
+     #if beachball hits trash changes the velocity of ball to
+    #bounce back   
+    if mag(beachball2.pos - trash2.pos) < 2.25:
+        beachball2.vel.x *= -1.0
+        beachball2.vel.z *= -1.0
+        beachball2.pos = trash2.pos + 2.26*hat(beachball2.pos - trash2.pos)
+   
+    # +++ End of COLLISIONS
+
+
+
+# +++ Start of EVENT-HANDLING section--separate functions for
+#                                keypresses and mouse clicks...
+
+def keydown_fun(event):
+    """This function is called each time a key is pressed."""
+    key = event.key
+    ri = randint(0, 10)
+    amount = 0.44               # "Strength" of the keypress's velocity changes
+    
+    if key == 'up' or key in 'wWiI':
+        turtle.vel = turtle.vel + vec(0, 0, -amount)
+    elif key == 'left' or key in 'aAjJ':
+        turtle.vel = turtle.vel + vec(-amount, 0, 0)
+    elif key == 'down' or key in 'sSkK':
+        turtle.vel = turtle.vel + vec(0, 0, amount)
+    elif key == 'right' or key in "dDlL":
+        turtle.vel = turtle.vel + vec(amount, 0, 0)
+    elif key in ' rR' and turtle.color == vec(1,0,0):
+        print("spooky turtles chance to play!")
+        turtle.vel = vec(0, 0, 0) # Reset! via R or the spacebar, " "
+        turtle.pos = vec(0, .5, -26)
+        turtle.color = vec(0,0,0)
+    
+
+def click_fun(event):
+    """This function is called each time the mouse is clicked."""
+    print("event is", event.event, event.which)
+
+# +++ End of EVENT-HANDLING section
+
+# +++ Other functions can go here...
+def win(turtle): 
+    """
+    tells the user they won, if balls hits wallc
+    and allows turtle to sink into ocean 
+    """
+    global winBoo
+    if turtle.pos.z > wallC.pos.z:           # Hit--check for z
+        #print(winBoo)
+        if winBoo == False:
+            print("The turtle has reached the ocean!!") # Prints win statement
+            winBoo = True
+            turtle.vel = vec(0, -1, 1)
+        
+def startgame(turtle): #gets rid of rules label 
+    if turtle.pos != vec(0, .5, -26):
+        temprules.visible = False
+
+
+        
+def randfloat( low, hi ):
+    """ implements a random number generator for FLOAT values
+        between low and hi (since it's float, it doesn't matter
+        if it's inclusive or exclusive of the right-hand endpoint
+    """
+    if hi < low: low, hi = hi, low  # swap if out of order!
+    random_float_value = (hi-low)*random()
+    return low + random_float_value
+        
+def choice(L):
+    """Implements Python's choice using the random() function."""
+    LEN = len(L)                        # Get the length
+    randomindex = int(LEN*random())     # Get a random index
+    return L[randomindex]               # Return that element
+
+def randint(low, hi):
+    """Implements Python's randint using the random() function.
+       returns an int from low to hi _inclusive_ (so, it's not 100% Pythonic)
+    """
+    if hi < low:
+        low, hi = hi, low               # Swap if out of order!
+    LEN = int(hi) - int(low) + 1.       # Get the span and add 1
+    randvalue = LEN*random() + int(low) # Get a random value
+    return int(randvalue)               # Return the integer part of it
+
+def randcolor():
+    """Returns a vector of (r, g, b) random from 0.0 to 1.0."""
+    r = random()           # This is different than Python's random.uniform
+    g = random()           # ..it automatically uses 0.0 to 1.0
+    b = random()
+    return vec(r, g, b)                 # A color is a three-element vector
+    
+    
+def corral_collide(turtle):
+    """Corral collisions!
+       turtle must have a .vel field and a .pos field.
+       keeps the turtle and alien within the corral 
+    """
+    # If the turtle hits wallA
+    if turtle.pos.z < wallA.pos.z:           # Hit--check for z
+        turtle.pos.z = wallA.pos.z           # Bring back into bounds
+        turtle.vel.z *= -1.0                 # Reverse the z velocity
+
+    # If the turtle hits wallB
+    if turtle.pos.x < wallB.pos.x:           # Hit--check for x
+        turtle.pos.x = wallB.pos.x           # Bring back into bounds
+        turtle.vel.x *= -1.6                 # Reverse the x velocity
+   
+    #if turtle hits wallD
+    if turtle.pos.x > wallD.pos.x:           # Hit--check for x
+        turtle.pos.x = wallD.pos.x           # Bring back into bounds
+        turtle.vel.x *= -1.6 
+    
+    # If the turtle hits wallB
+    if beachball1.pos.x < wallB.pos.x:           # Hit--check for x
+        beachball1.pos.x = wallB.pos.x           # Bring back into bounds
+        beachball1.vel.x *= -1.0                 # Reverse the x velocity
+   
+    #if turtle hits wallD
+    if beachball1.pos.x > wallD.pos.x:           # Hit--check for x
+        beachball1.pos.x = wallD.pos.x           # Bring back into bounds
+        beachball1.vel.x *= -1.0   
+    
+     # If the turtle hits wallB
+    if beachball2.pos.x < wallB.pos.x:           # Hit--check for x
+        beachball2.pos.x = wallB.pos.x           # Bring back into bounds
+        beachball2.vel.x *= -1.0                 # Reverse the x velocity
+   
+    #if turtle hits wallD
+    if beachball2.pos.x > wallD.pos.x:           # Hit--check for x
+        beachball2.pos.x = wallD.pos.x           # Bring back into bounds
+        beachball2.vel.x *= -1.0   
+
+
+   #if turtle hits walle
+    if turtle.pos.z > wallE.pos.z:           # Hit--check for z
+        turtle.pos.z = wallE.pos.z           # Bring back into beach area
+        turtle.vel.z *= -1.0                 # Reverse the x velocity
+    
+    #If beachball hits start of ocean
+    if beachball1.pos.z > wallC.pos.z:           # Hit--check for z
+        beachball1.pos.z = wallC.pos.z           # Bring back into beach area
+        beachball1.vel.z *= -1.0 
+    
+    #If beachball hits ocean
+    if beachball2.pos.z > wallC.pos.z:           # Hit--check for z
+        beachball2.pos.z = wallC.pos.z           # Bring back into beach area
+        beachball2.vel.z *= -1.0 
+        
+    #if turtle hits end of ocean 
+    if turtle.pos.z == wallE.pos.z - 4:           # Hit--check for z
+        turtle.vel.z = 0 
+        
